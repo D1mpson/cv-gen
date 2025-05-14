@@ -6,6 +6,10 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+/**
+ * Реальна реалізація сервісу відправки електронної пошти
+ * Використовується у всіх середовищах, крім production
+ */
 @Service
 @Profile("!prod")
 public class RealEmailService implements EmailService {

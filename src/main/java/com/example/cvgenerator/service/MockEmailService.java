@@ -6,6 +6,10 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
+/**
+ * Мок-реалізація сервісу відправки електронної пошти для production
+ * Не відправляє реальні листи, лише логує інформацію
+ */
 @Service
 @Primary
 @Profile("prod")
@@ -16,7 +20,9 @@ public class MockEmailService implements EmailService {
     @Override
     public void sendVerificationEmail(String to, String code) {
         logger.info("MOCK: Відправка верифікаційного листа на {} з кодом {}", to, code);
-        // Виведемо код в логи для тестування
+
+        // В production середовищі ми не відправляємо реальні листи
+        // Але логуємо код для тестування
         logger.info("Verification code for {}: {}", to, code);
     }
 }
