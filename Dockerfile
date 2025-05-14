@@ -3,7 +3,7 @@ WORKDIR /app
 COPY . .
 RUN mvn clean package -DskipTests=true
 
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/cv-generator-0.0.1-SNAPSHOT.jar app.jar
 RUN mkdir -p /app/uploads/photos && chmod -R 777 /app/uploads
@@ -11,5 +11,4 @@ RUN mkdir -p /app/uploads/photos && chmod -R 777 /app/uploads
 ENV SPRING_PROFILES_ACTIVE=prod
 
 EXPOSE 8080
-# Використовуємо команду запуску з аргументами Spring Boot
-CMD ["java", "-noverify", "-XX:TieredStopAtLevel=1", "-Dspring.jmx.enabled=false", "-Dspring.config.location=classpath:/application.properties,classpath:/application-prod.properties", "-jar", "/app/app.jar", "--spring.jmx.enabled=false"]
+CMD ["java", "-Xmx256m", "-Xms128m", "-XX:+UseSerialGC", "-XX:MaxRAM=300m", "-Djava.awt.headless=true", "-Djava.security.egd=file:/dev/./urandom", "-Dcom.sun.management.jmxremote=false", "-Dspring.jmx.enabled=false", "-jar", "/app/app.jar"]
