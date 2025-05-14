@@ -1,4 +1,4 @@
-/Users/artem/Documents/GitHub/cv-gen/src/test/java/com/example/cvgenerator/CvGeneratorApplicationTests.java
-/Users/artem/Documents/GitHub/cv-gen/src/test/java/com/example/cvgenerator/service/UserServiceTest.java
-/Users/artem/Documents/GitHub/cv-gen/src/test/java/com/example/cvgenerator/controller/UserControllerTest.java
-/Users/artem/Documents/GitHub/cv-gen/src/test/java/com/example/cvgenerator/controller/TestSecurityConfig.java
+/Users/artem/Documents/GitHub/cv-generator/src/test/java/com/example/cvgenerator/service/UserServiceTest.java
+/Users/artem/Documents/GitHub/cv-generator/src/test/java/com/example/cvgenerator/controller/TestSecurityConfig.java
+/Users/artem/Documents/GitHub/cv-generator/src/test/java/com/example/cvgenerator/controller/UserControllerTest.java
+/Users/artem/Documents/GitHub/cv-generator/src/test/java/com/example/cvgenerator/CvGeneratorApplicationTests.java

@@ -46,14 +46,8 @@ public class DatabaseConfig {
                 .type(HikariDataSource.class)
                 .build();
 
-        // Встановлюємо налаштування для HikariCP
-        dataSource.setAutoCommit(false);
         dataSource.setMaximumPoolSize(5);
         dataSource.setMinimumIdle(2);
-        dataSource.setConnectionTimeout(30000);
-        dataSource.setIdleTimeout(600000);
-        dataSource.setConnectionTestQuery("SELECT 1");
-        dataSource.setValidationTimeout(30000);
 
         return dataSource;
     }

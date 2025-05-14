@@ -5,14 +5,12 @@ import com.example.cvgenerator.model.User;
 import com.example.cvgenerator.service.TemplateService;
 import com.example.cvgenerator.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 import java.time.LocalDate;
 
 @Component
-@Profile("!prod")
 public class DataInitializer {
 
     private final TemplateService templateService;

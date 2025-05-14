@@ -3,21 +3,33 @@ package com.example.cvgenerator.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.LocaleResolver;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.i18n.SessionLocaleResolver;@Configuration
+import org.springframework.web.servlet.i18n.SessionLocaleResolver;
+
+import java.util.Locale;
+
+@Configuration
 public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Спрощена версія для тестування
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:uploads/")
-                .setCachePeriod(3600);
+                .addResourceLocations("file:uploads/");
 
         registry.addResourceHandler("/images/**")
-                .addResourceLocations("classpath:/images/")
-                .setCachePeriod(3600);
+                .addResourceLocations("file:src/main/resources/images/");
+
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations("classpath:/images/");
     }
+
+//    @Bean
+//    public LocaleResolver localeResolver() {
+//
+//        SessionLocaleResolver slr = new SessionLocaleResolver();
+//        slr.setDefaultLocale(Locale.US);
+//
+//        return slr;
+//    }
 }

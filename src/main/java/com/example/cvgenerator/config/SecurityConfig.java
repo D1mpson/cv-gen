@@ -9,7 +9,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.core.annotation.Order;
 
 @Configuration
 @EnableWebSecurity
@@ -21,12 +20,11 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(1)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
+        http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/register", "/login", "/help", "/css/**", "/js/**", "/images/**", "/uploads/**", "/error", "/api/health").permitAll()
-                        .requestMatchers("/verify", "/verify/**", "/resend-code").permitAll()
+                        .requestMatchers("/", "/register", "/login", "/help", "/css/**", "/js/**", "/images/**", "/uploads/**", "/error").permitAll()
+                        .requestMatchers("/verify", "/verify/**", "/resend-code").permitAll() // Нові шляхи для верифікації
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
@@ -42,8 +40,9 @@ public class SecurityConfig {
                         .clearAuthentication(true)
                         .permitAll()
                 )
+                // Додамо налаштування для забезпечення зберігання контексту безпеки в сесії
                 .securityContext(securityContext -> securityContext
-                        .requireExplicitSave(false)
+                        .requireExplicitSave(false) // Автоматично зберігати контекст
                 );
 
         return http.build();

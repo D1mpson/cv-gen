@@ -1,6 +1,5 @@
 package com.example.cvgenerator.service;
 
-import com.example.cvgenerator.config.FileStorageConfig;
 import com.example.cvgenerator.model.CV;
 import com.example.cvgenerator.model.User;
 import com.example.cvgenerator.repository.CVRepository;
@@ -21,16 +20,15 @@ public class CVService {
 
     private final CVRepository cvRepository;
     private final UserService userService;
-    private final String uploadDir;
+    private final String UPLOAD_DIR = "uploads/photos/";
 
     @Autowired
-    public CVService(CVRepository cvRepository, UserService userService, FileStorageConfig fileStorageConfig) {
+    public CVService(CVRepository cvRepository, UserService userService) {
         this.cvRepository = cvRepository;
         this.userService = userService;
-        this.uploadDir = fileStorageConfig.getUploadDirectory();
 
         try {
-            Path uploadPath = Paths.get(uploadDir);
+            Path uploadPath = Paths.get(UPLOAD_DIR);
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
             }
@@ -47,7 +45,7 @@ public class CVService {
         // Обробка завантаження фото
         if (photoFile != null && !photoFile.isEmpty()) {
             String fileName = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
-            Path filePath = Paths.get(uploadDir + fileName);
+            Path filePath = Paths.get(UPLOAD_DIR + fileName);
             Files.write(filePath, photoFile.getBytes());
             cv.setPhotoPath(fileName);
         }
@@ -118,12 +116,12 @@ public class CVService {
         if (photoFile != null && !photoFile.isEmpty()) {
             // Видалення старого фото, якщо воно існує
             if (existingCV.getPhotoPath() != null && !existingCV.getPhotoPath().isEmpty()) {
-                Path oldPath = Paths.get(uploadDir + existingCV.getPhotoPath());
+                Path oldPath = Paths.get(UPLOAD_DIR + existingCV.getPhotoPath());
                 Files.deleteIfExists(oldPath);
             }
 
             String fileName = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
-            Path filePath = Paths.get(uploadDir + fileName);
+            Path filePath = Paths.get(UPLOAD_DIR + fileName);
             Files.write(filePath, photoFile.getBytes());
             existingCV.setPhotoPath(fileName);
         }
@@ -143,7 +141,7 @@ public class CVService {
 
         if (cv.getPhotoPath() != null && !cv.getPhotoPath().isEmpty()) {
             try {
-                Path photoPath = Paths.get(uploadDir + cv.getPhotoPath());
+                Path photoPath = Paths.get(UPLOAD_DIR + cv.getPhotoPath());
                 Files.deleteIfExists(photoPath);
             } catch (IOException e) {
                 System.err.println("Не вдалося видалити фото: " + e.getMessage());

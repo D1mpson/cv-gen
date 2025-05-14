@@ -48,7 +48,4 @@ public class TemplateService {
 
         return templateRepository.save(existingTemplate);
     }
-    public long countTemplates() {
-        return templateRepository.count();
-    }
 }

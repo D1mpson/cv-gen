@@ -2,10 +2,7 @@ package com.example.cvgenerator.service;
 
 import com.example.cvgenerator.model.User;
 import com.example.cvgenerator.repository.UserRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.DisabledException;
@@ -27,15 +24,10 @@ import java.util.stream.Collectors;
 @Service
 public class UserService implements UserDetailsService {
 
-    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbcTemplate;
     private final EmailService emailService;
-
-    @Value("${spring.profiles.active:local}")
-    private String activeProfile;
 
     // Додаємо прапорець для пропуску перевірки верифікації
     private static final ThreadLocal<Boolean> skipVerificationCheck = new ThreadLocal<>();
@@ -89,7 +81,7 @@ public class UserService implements UserDetailsService {
             });
             return Optional.ofNullable(user);
         } catch (Exception e) {
-            logger.info("Користувача з email {} не знайдено: {}", email, e.getMessage());
+            System.out.println("Користувача з email " + email + " не знайдено: " + e.getMessage());
             return Optional.empty();
         }
     }
@@ -152,19 +144,10 @@ public class UserService implements UserDetailsService {
                 return true; // Користувач вже верифікований
             }
 
-            // В production середовищі автоматично верифікуємо користувача
-            if ("prod".equals(activeProfile)) {
-                user.setVerified(true);
-                user.setVerificationCode(null);
-                user.setVerificationCodeExpiry(null);
-                userRepository.save(user);
-                logger.info("Автоматична верифікація користувача в prod: {}", email);
-                return true;
-            }
-
             // Перевіряємо код та чи не закінчився термін його дії
             if (code.equals(user.getVerificationCode()) &&
                     LocalDateTime.now().isBefore(user.getVerificationCodeExpiry())) {
+
                 user.setVerified(true);
                 user.setVerificationCode(null);
                 user.setVerificationCodeExpiry(null);
@@ -190,7 +173,6 @@ public class UserService implements UserDetailsService {
                 user.setVerificationCodeExpiry(LocalDateTime.now().plusMinutes(10));
                 userRepository.save(user);
 
-                // Використовуємо сервіс відправки листів (автоматично вибирається відповідна реалізація)
                 emailService.sendVerificationEmail(email, newCode);
                 return true;
             }
@@ -289,9 +271,5 @@ public class UserService implements UserDetailsService {
                 .password(user.getPassword())
                 .roles(user.getRole().replace("ROLE_", ""))
                 .build();
-    }
-
-    public boolean adminExists() {
-        return !findByRole("ROLE_ADMIN").isEmpty();
     }
 }

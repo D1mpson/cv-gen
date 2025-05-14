@@ -3,7 +3,6 @@ package com.example.cvgenerator.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.ModelAndView;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,10 +17,11 @@ public class HealthCheckController {
         return ResponseEntity.ok(response);
     }
 
+    // Видаляємо або коментуємо метод root(), щоб уникнути конфлікту зі StartPageController
+    /*
     @GetMapping("/")
-    public ModelAndView root() {
-        // Замість простого повернення імені шаблону, повертаємо ModelAndView
-        // Це вказує Spring, що це RestController, який все ще може повертати шаблон
-        return new ModelAndView("index");
+    public String root() {
+        return "index";
     }
+    */
 }
