@@ -23,11 +23,9 @@ public class User {
     private Long id;
 
     @NotBlank(message = "Імʼя є обовʼязковим")
-    @Column(name = "first_name")  // Додано явне відображення
     private String firstName;
 
     @NotBlank(message = "Прізвище є обовʼязковим")
-    @Column(name = "last_name")  // Додано явне відображення
     private String lastName;
 
     @NotBlank(message = "Email є обовʼязковим")
@@ -41,17 +39,14 @@ public class User {
 
     @NotBlank(message = "Номер телефону є обовʼязковим")
     @Pattern(regexp = "(\\+380[0-9]{9}|0[0-9]{9})", message = "Некоректний формат номеру телефону")
-    @Column(name = "phone_number")  // Додано явне відображення
     private String phoneNumber;
 
     @NotNull(message = "Дата народження є обовʼязковою")
     @Past(message = "Дата народження повинна бути в минулому")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
-    @Column(name = "birth_date")  // Додано явне відображення
     private LocalDate birthDate;
 
     @NotNull(message = "Місто є обовʼязковим")
-    @Column(name = "city_life")  // Додано явне відображення
     private String cityLife;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
@@ -63,7 +58,7 @@ public class User {
     private String verificationCode;
 
     @Column(name = "verified")
-    private Boolean verified = false;
+    private Boolean verified = false;  // Змінено з boolean на Boolean
 
     @Column(name = "verification_code_expiry")
     private LocalDateTime verificationCodeExpiry;
@@ -71,16 +66,5 @@ public class User {
     @SuppressWarnings("unused")
     public boolean isVerified() {
         return verified != null ? verified : false;
-    }
-
-    // Додаємо методи логування для відстеження процесу збереження
-    @PrePersist
-    public void prePersist() {
-        System.out.println("Зберігаємо нового користувача з email: " + this.email);
-    }
-
-    @PostPersist
-    public void postPersist() {
-        System.out.println("Користувач збережений з ID: " + this.id);
     }
 }

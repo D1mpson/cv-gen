@@ -46,8 +46,6 @@ public class DatabaseConfig {
                 .type(HikariDataSource.class)
                 .build();
 
-        // Важливі налаштування
-        dataSource.setAutoCommit(true);
         dataSource.setMaximumPoolSize(5);
         dataSource.setMinimumIdle(2);
 
