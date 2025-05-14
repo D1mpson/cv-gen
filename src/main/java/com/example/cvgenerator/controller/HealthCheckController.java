@@ -16,11 +16,4 @@ public class HealthCheckController {
         response.put("status", "UP");
         return ResponseEntity.ok(response);
     }
-
-    // Railway перевіряє кореневий шлях за замовчуванням,
-    // цей метод буде відповідати на запити, якщо користувач відвідує API напряму
-    @GetMapping("/")
-    public ResponseEntity<String> root() {
-        return ResponseEntity.ok("CV Generator API is running");
-    }
 }
