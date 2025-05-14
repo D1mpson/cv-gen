@@ -11,4 +11,5 @@ RUN mkdir -p /app/uploads/photos && chmod -R 777 /app/uploads
 ENV SPRING_PROFILES_ACTIVE=prod
 
 EXPOSE 8080
-CMD ["java", "-Xmx256m", "-Xms128m", "-XX:+UseSerialGC", "-XX:MaxRAM=300m", "-Djava.awt.headless=true", "-Djava.security.egd=file:/dev/./urandom", "-Dcom.sun.management.jmxremote=false", "-Dspring.jmx.enabled=false", "-jar", "/app/app.jar"]
+# Повністю вимикаємо всі JMX, метрики та моніторинг
+CMD ["java", "-Xmx256m", "-Xms128m", "-XX:+UseSerialGC", "-XX:MaxRAM=300m", "-Djava.awt.headless=true", "-Djava.security.egd=file:/dev/./urandom", "-XX:+DisableAttachMechanism", "-Dcom.sun.management.jmxremote=false", "-Dcom.sun.management.jmxremote.authenticate=false", "-Dcom.sun.management.jmxremote.ssl=false", "-Dcom.sun.management.jmxremote.local.only=true", "-Dspring.jmx.enabled=false", "-Djdk.management.agent.disable=true", "-Djava.rmi.server.hostname=localhost", "-jar", "/app/app.jar"]
