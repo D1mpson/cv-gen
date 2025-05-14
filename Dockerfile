@@ -11,5 +11,5 @@ RUN mkdir -p /app/uploads/photos && chmod -R 777 /app/uploads
 ENV SPRING_PROFILES_ACTIVE=prod
 
 EXPOSE 8080
-# Обмеження використання пам'яті для Java
-CMD ["java", "-Xmx512m", "-Xms256m", "-jar", "/app/app.jar"]
+# Обмеження використання пам'яті
+CMD ["java", "-Xmx512m", "-Xms256m", "-XX:+UseSerialGC", "-XX:MaxRAM=512m", "-jar", "/app/app.jar"]
