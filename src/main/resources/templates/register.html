@@ -48,9 +48,9 @@
 
                 <div class="form-group">
                     <label for="cityLife" th:text="#{register.cityLife}">Місто</label>
-                    <input type="tel" class="form-control" id="cityLife" th:field="*{cityLife}" required>
+                    <input type="text" class="form-control" id="cityLife" name="cityLife" th:field="*{cityLife}" required>
                     <div class="text-danger" th:if="${#fields.hasErrors('cityLife')}" th:errors="*{cityLife}"></div>
-                    <div class="form-hint" th:text="#{register.cityLife}">Місто</div>
+                    <div class="form-hint">Вкажіть місто, в якому ви проживаєте</div>
                 </div>
 
                 <div class="form-group">

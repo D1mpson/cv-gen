@@ -47,7 +47,7 @@ public class User {
     private LocalDate birthDate;
 
     @NotNull(message = "Місто є обовʼязковим")
-    private String cityLife;
+    private String cityLife = ""; // Додаємо значення за замовчуванням
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<CV> cvList = new ArrayList<>();
@@ -58,7 +58,7 @@ public class User {
     private String verificationCode;
 
     @Column(name = "verified")
-    private Boolean verified = false;  // Змінено з boolean на Boolean
+    private Boolean verified = false;
 
     @Column(name = "verification_code_expiry")
     private LocalDateTime verificationCodeExpiry;

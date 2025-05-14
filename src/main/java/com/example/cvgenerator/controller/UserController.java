@@ -6,6 +6,8 @@ import com.example.cvgenerator.service.CVService;
 import com.example.cvgenerator.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,6 +20,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class UserController {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     private final UserService userService;
     private final CVService cvService;
@@ -44,15 +48,26 @@ public class UserController {
                                       RedirectAttributes redirectAttrs) {
         // Перевіряємо чи є помилки валідації
         if (result.hasErrors()) {
+            logger.warn("Помилки валідації при реєстрації: {}", result.getAllErrors());
             return "register";
         }
 
+        // Додаткова перевірка поля cityLife
+        if (user.getCityLife() == null || user.getCityLife().trim().isEmpty()) {
+            logger.info("Поле cityLife пусте, встановлюємо значення за замовчуванням");
+            user.setCityLife("Не вказано");
+        }
+
         try {
+            logger.info("Спроба реєстрації користувача з email: {}", user.getEmail());
             userService.saveUser(user);
+            logger.info("Користувач успішно зареєстрований: {}", user.getEmail());
+
             redirectAttrs.addFlashAttribute("message", "Реєстрація пройшла успішно. Перевірте вашу електронну пошту для підтвердження акаунту.");
             redirectAttrs.addAttribute("email", user.getEmail());
             return "redirect:/verify"; // Перенаправляємо на сторінку верифікації
         } catch (RuntimeException e) {
+            logger.error("Помилка при реєстрації користувача: {}", e.getMessage(), e);
             result.rejectValue("email", "error.user", e.getMessage());
             return "register";
         }
@@ -110,10 +125,10 @@ public class UserController {
             }
 
             userService.saveUser(currentUser);
+            logger.info("Профіль користувача успішно оновлено: {}", currentUser.getEmail());
 
         } catch (Exception e) {
-            System.err.println("Помилка при оновленні профілю: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Помилка при оновленні профілю: {}", e.getMessage(), e);
             return "redirect:/edit-profile";
         }
 
