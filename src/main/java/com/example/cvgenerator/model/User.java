@@ -19,49 +19,47 @@ import java.util.List;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE, generator = "user_gen")
-    @TableGenerator(
-            name = "user_gen",
-            table = "id_generator",
-            pkColumnName = "gen_name",
-            valueColumnName = "gen_value",
-            pkColumnValue = "user_id",
-            initialValue = 1,
-            allocationSize = 1
-    )
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // Повертаємо до IDENTITY
     @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
     @NotBlank(message = "Імʼя є обовʼязковим")
+    @Column(name = "first_name") // Явно вказуємо назву колонки
     private String firstName;
 
     @NotBlank(message = "Прізвище є обовʼязковим")
+    @Column(name = "last_name") // Явно вказуємо назву колонки
     private String lastName;
 
     @NotBlank(message = "Email є обовʼязковим")
     @Email(message = "Некоректний формат email")
-    @Column(unique = true)
+    @Column(name = "email", unique = true)
     private String email;
 
     @NotBlank(message = "Пароль є обовʼязковим")
     @Size(min = 6, message = "Пароль повинен містити не менше 6 символів")
+    @Column(name = "password")
     private String password;
 
     @NotBlank(message = "Номер телефону є обовʼязковим")
     @Pattern(regexp = "(\\+380[0-9]{9}|0[0-9]{9})", message = "Некоректний формат номеру телефону")
+    @Column(name = "phone_number") // Явно вказуємо назву колонки
     private String phoneNumber;
 
     @NotNull(message = "Дата народження є обовʼязковою")
     @Past(message = "Дата народження повинна бути в минулому")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
+    @Column(name = "birth_date") // Важливо! Явно вказуємо назву колонки
     private LocalDate birthDate;
 
     @NotNull(message = "Місто є обовʼязковим")
+    @Column(name = "city_life") // Явно вказуємо назву колонки
     private String cityLife;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<CV> cvList = new ArrayList<>();
 
+    @Column(name = "role")
     private String role = "ROLE_USER";
 
     @Column(name = "verification_code", length = 6)
