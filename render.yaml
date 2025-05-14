@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: cv-generator
+    env: docker
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java -jar target/*.jar
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: JDBC_DATABASE_URL
+        fromDatabase:
+          name: cv-db
+          property: connectionString
+      - key: JDBC_DATABASE_USERNAME
+        fromDatabase:
+          name: cv-db
+          property: user
+      - key: JDBC_DATABASE_PASSWORD
+        fromDatabase:
+          name: cv-db
+          property: password
+
+databases:
+  - name: cv-db
+    databaseName: cv
+    user: cv_user
+    plan: free
