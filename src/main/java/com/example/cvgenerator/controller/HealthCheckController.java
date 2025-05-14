@@ -16,4 +16,9 @@ public class HealthCheckController {
         response.put("status", "UP");
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/")
+    public String root() {
+        return "index";
+    }
 }

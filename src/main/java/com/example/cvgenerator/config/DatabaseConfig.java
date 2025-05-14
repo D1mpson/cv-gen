@@ -52,6 +52,8 @@ public class DatabaseConfig {
         dataSource.setMinimumIdle(2);
         dataSource.setConnectionTimeout(30000);
         dataSource.setIdleTimeout(600000);
+        dataSource.setConnectionTestQuery("SELECT 1");
+        dataSource.setValidationTimeout(30000);
 
         return dataSource;
     }

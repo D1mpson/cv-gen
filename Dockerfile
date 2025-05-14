@@ -11,5 +11,4 @@ RUN mkdir -p /app/uploads/photos && chmod -R 777 /app/uploads
 ENV SPRING_PROFILES_ACTIVE=prod
 
 EXPOSE 8080
-# Оптимізовані налаштування JVM для Railway
-CMD ["java", "-Xmx256m", "-Xms128m", "-XX:+UseSerialGC", "-XX:MaxRAM=300m", "-jar", "/app/app.jar"]
+CMD ["java", "-Xmx256m", "-Xms128m", "-XX:+UseSerialGC", "-XX:MaxRAM=300m", "-Djava.awt.headless=true", "-Djava.security.egd=file:/dev/./urandom", "-Dcom.sun.management.jmxremote=false", "-Dspring.jmx.enabled=false", "-jar", "/app/app.jar"]
