@@ -46,7 +46,8 @@ public class DatabaseConfig {
                 .type(HikariDataSource.class)
                 .build();
 
-        dataSource.setAutoCommit(true); // Додаємо цей рядок
+        // Важливо: встановлюємо autoCommit в true
+        dataSource.setAutoCommit(true);
         dataSource.setMaximumPoolSize(5);
         dataSource.setMinimumIdle(2);
 
