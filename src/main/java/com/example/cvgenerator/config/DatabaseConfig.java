@@ -1,5 +1,6 @@
 package com.example.cvgenerator.config;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,18 +31,28 @@ public class DatabaseConfig {
         String username = env.getProperty("MYSQLUSER", "root");
         String password = env.getProperty("MYSQLPASSWORD", "");
 
-        String url = String.format("jdbc:mysql://%s:%s/%s?useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=true",
+        String url = String.format("jdbc:mysql://%s:%s/%s?useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=true&autoReconnect=true",
                 host, port, database);
 
         logger.info("Database URL: {}", url);
         logger.info("Database User: {}", username);
         logger.info("Database is configured with host: {}, port: {}, database: {}", host, port, database);
 
-        return DataSourceBuilder.create()
+        HikariDataSource dataSource = (HikariDataSource) DataSourceBuilder.create()
                 .url(url)
                 .username(username)
                 .password(password)
                 .driverClassName("com.mysql.cj.jdbc.Driver")
+                .type(HikariDataSource.class)
                 .build();
+
+        // Встановлюємо налаштування для HikariCP
+        dataSource.setAutoCommit(false);
+        dataSource.setMaximumPoolSize(5);
+        dataSource.setMinimumIdle(2);
+        dataSource.setConnectionTimeout(30000);
+        dataSource.setIdleTimeout(600000);
+
+        return dataSource;
     }
 }

@@ -272,4 +272,7 @@ public class UserService implements UserDetailsService {
                 .roles(user.getRole().replace("ROLE_", ""))
                 .build();
     }
+    public boolean adminExists() {
+        return !findByRole("ROLE_ADMIN").isEmpty();
+    }
 }
