@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class StartPageController {
 
-    @GetMapping("/")
+    @GetMapping("/home")  // Змінюємо з "/" на "/home"
     public String index() {
         return "index";
     }
@@ -15,7 +15,6 @@ public class StartPageController {
     public String login() {
         return "login";
     }
-
 
     @GetMapping("/help")
     public String help() {
