@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Generator - Підтвердження електронної пошти</title>
+    <link rel="stylesheet" th:href="@{/css/other-page/header.css}">
+    <link rel="stylesheet" th:href="@{/css/login-and-registration/verify.css}">
+    <link rel="stylesheet" th:href="@{/css/other-page/footer.css}">
+</head>
+<body>
+<!-- Підключення хедера -->
+<div th:replace="~{header :: header}"></div>
+
+<!-- Main content -->
+<main class="main-content">
+    <div class="verification-container">
+        <div class="verification-header">
+            <h1>Підтвердження електронної пошти</h1>
+        </div>
+        <div class="verification-form">
+            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+            <div th:if="${info}" class="alert alert-info" th:text="${info}"></div>
+            <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+
+            <p>На вашу електронну пошту було надіслано код підтвердження. Введіть його нижче.</p>
+
+            <form th:action="@{/verify}" method="post">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" class="form-control" id="email" name="email"
+                           th:value="${email}" required readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="code">Код підтвердження</label>
+                    <input type="text" class="form-control" id="code" name="code"
+                           placeholder="Введіть 6-значний код" required
+                           pattern="[0-9]{6}" maxlength="6">
+                    <div class="form-hint">Введіть 6-значний код, надісланий на вашу пошту</div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-verify">Підтвердити</button>
+                </div>
+            </form>
+
+            <div class="resend-code">
+                <p>Не отримали код?</p>
+                <form th:action="@{/resend-code}" method="post">
+                    <input type="hidden" name="email" th:value="${email}">
+                    <button type="submit" class="btn btn-resend">Надіслати повторно</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Підключення футера -->
+<div th:replace="~{footer :: footer}"></div>
+</body>
+</html>

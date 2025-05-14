@@ -1,0 +1,4 @@
+com/example/cvgenerator/service/UserServiceTest.class
+com/example/cvgenerator/controller/UserControllerTest.class
+com/example/cvgenerator/CvGeneratorApplicationTests.class
+com/example/cvgenerator/controller/TestSecurityConfig.class
