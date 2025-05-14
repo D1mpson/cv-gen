@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 
 import javax.sql.DataSource;
-import java.util.Properties;
 
 @Configuration
 @Profile("prod")
@@ -47,26 +46,9 @@ public class DatabaseConfig {
                 .type(HikariDataSource.class)
                 .build();
 
-        // Критичні налаштування для отримання ID
-        dataSource.setAutoCommit(true);
+        dataSource.setAutoCommit(true); // Додаємо цей рядок
         dataSource.setMaximumPoolSize(5);
         dataSource.setMinimumIdle(2);
-
-        // Додаткові налаштування для покращення продуктивності
-        Properties props = new Properties();
-        props.setProperty("useConfigs", "maxPerformance");
-        props.setProperty("rewriteBatchedStatements", "true");
-        props.setProperty("cachePrepStmts", "true");
-        props.setProperty("prepStmtCacheSize", "250");
-        props.setProperty("prepStmtCacheSqlLimit", "2048");
-        props.setProperty("useServerPrepStmts", "true");
-        props.setProperty("useLocalSessionState", "true");
-        props.setProperty("cacheResultSetMetadata", "true");
-        props.setProperty("cacheServerConfiguration", "true");
-        props.setProperty("elideSetAutoCommits", "true");
-        props.setProperty("maintainTimeStats", "false");
-        props.setProperty("useSSL", "false");
-        dataSource.setDataSourceProperties(props);
 
         return dataSource;
     }
