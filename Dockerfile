@@ -1,18 +1,14 @@
-FROM openjdk:17-jdk-slim
-
+FROM maven:3.8.5-openjdk-17 as build
 WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests=true
 
-# Копіюємо JAR-файл
-COPY target/*.jar app.jar
-
-# Створюємо директорію для завантажень
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 RUN mkdir -p /app/uploads/photos
 
-# Визначаємо змінні середовища
 ENV SPRING_PROFILES_ACTIVE=prod
 
-# Відкриваємо порт
 EXPOSE 8080
-
-# Команда запуску
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
