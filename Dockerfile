@@ -3,8 +3,9 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline
 COPY src ./src
-COPY application-local.properties ./application-local.properties
-COPY application-prod.properties ./application-prod.properties
+# Копіюємо всі файли конфігурації, незалежно від їх розташування
+COPY **/application*.properties ./
+# Якщо файли в src/main/resources, це також буде працювати завдяки копіюванню src директорії вище
 RUN mvn clean package -DskipTests=true
 
 FROM openjdk:17-jdk-slim
