@@ -19,47 +19,44 @@ import java.util.List;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Повертаємо до IDENTITY
-    @Column(name = "id", nullable = false, updatable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank(message = "Імʼя є обовʼязковим")
-    @Column(name = "first_name") // Явно вказуємо назву колонки
+    @Column(name = "first_name")  // Додано явне відображення
     private String firstName;
 
     @NotBlank(message = "Прізвище є обовʼязковим")
-    @Column(name = "last_name") // Явно вказуємо назву колонки
+    @Column(name = "last_name")  // Додано явне відображення
     private String lastName;
 
     @NotBlank(message = "Email є обовʼязковим")
     @Email(message = "Некоректний формат email")
-    @Column(name = "email", unique = true)
+    @Column(unique = true)
     private String email;
 
     @NotBlank(message = "Пароль є обовʼязковим")
     @Size(min = 6, message = "Пароль повинен містити не менше 6 символів")
-    @Column(name = "password")
     private String password;
 
     @NotBlank(message = "Номер телефону є обовʼязковим")
     @Pattern(regexp = "(\\+380[0-9]{9}|0[0-9]{9})", message = "Некоректний формат номеру телефону")
-    @Column(name = "phone_number") // Явно вказуємо назву колонки
+    @Column(name = "phone_number")  // Додано явне відображення
     private String phoneNumber;
 
     @NotNull(message = "Дата народження є обовʼязковою")
     @Past(message = "Дата народження повинна бути в минулому")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
-    @Column(name = "birth_date") // Важливо! Явно вказуємо назву колонки
+    @Column(name = "birth_date")  // Додано явне відображення
     private LocalDate birthDate;
 
     @NotNull(message = "Місто є обовʼязковим")
-    @Column(name = "city_life") // Явно вказуємо назву колонки
+    @Column(name = "city_life")  // Додано явне відображення
     private String cityLife;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<CV> cvList = new ArrayList<>();
 
-    @Column(name = "role")
     private String role = "ROLE_USER";
 
     @Column(name = "verification_code", length = 6)
@@ -76,13 +73,14 @@ public class User {
         return verified != null ? verified : false;
     }
 
+    // Додаємо методи логування для відстеження процесу збереження
     @PrePersist
     public void prePersist() {
-        System.out.println("Saving new user with email: " + this.email);
+        System.out.println("Зберігаємо нового користувача з email: " + this.email);
     }
 
     @PostPersist
     public void postPersist() {
-        System.out.println("User saved successfully with ID: " + this.id);
+        System.out.println("Користувач збережений з ID: " + this.id);
     }
 }
