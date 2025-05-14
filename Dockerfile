@@ -1,11 +1,6 @@
 FROM maven:3.8.5-openjdk-17 AS build
 WORKDIR /app
-COPY pom.xml .
-RUN mvn dependency:go-offline
-COPY src ./src
-# Копіюємо всі файли конфігурації, незалежно від їх розташування
-COPY **/application*.properties ./
-# Якщо файли в src/main/resources, це також буде працювати завдяки копіюванню src директорії вище
+COPY . .
 RUN mvn clean package -DskipTests=true
 
 FROM openjdk:17-jdk-slim
