@@ -19,7 +19,16 @@ import java.util.List;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.TABLE, generator = "user_gen")
+    @TableGenerator(
+            name = "user_gen",
+            table = "id_generator",
+            pkColumnName = "gen_name",
+            valueColumnName = "gen_value",
+            pkColumnValue = "user_id",
+            initialValue = 1,
+            allocationSize = 1
+    )
     @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
@@ -59,7 +68,7 @@ public class User {
     private String verificationCode;
 
     @Column(name = "verified")
-    private Boolean verified = false;  // Змінено з boolean на Boolean
+    private Boolean verified = false;
 
     @Column(name = "verification_code_expiry")
     private LocalDateTime verificationCodeExpiry;
@@ -67,5 +76,15 @@ public class User {
     @SuppressWarnings("unused")
     public boolean isVerified() {
         return verified != null ? verified : false;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        System.out.println("Saving new user with email: " + this.email);
+    }
+
+    @PostPersist
+    public void postPersist() {
+        System.out.println("User saved successfully with ID: " + this.id);
     }
 }

@@ -10,8 +10,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
+import jakarta.annotation.PostConstruct;
 
 @Configuration
 @Profile("prod")
@@ -21,6 +23,21 @@ public class DatabaseConfig {
 
     @Autowired
     private Environment env;
+
+    @Autowired(required = false)
+    private JdbcTemplate jdbcTemplate;
+
+    @PostConstruct
+    public void init() {
+        if (jdbcTemplate != null) {
+            try {
+                jdbcTemplate.execute("SELECT 1");
+                logger.info("Successfully connected to database");
+            } catch (Exception e) {
+                logger.error("Failed to connect to database: {}", e.getMessage());
+            }
+        }
+    }
 
     @Bean
     @Primary
@@ -46,7 +63,7 @@ public class DatabaseConfig {
                 .type(HikariDataSource.class)
                 .build();
 
-        // Важливо: встановлюємо autoCommit в true
+        // Важливі налаштування
         dataSource.setAutoCommit(true);
         dataSource.setMaximumPoolSize(5);
         dataSource.setMinimumIdle(2);

@@ -18,6 +18,11 @@ public class TransactionConfig {
     public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
         JpaTransactionManager txManager = new JpaTransactionManager();
         txManager.setEntityManagerFactory(entityManagerFactory);
+
+        // Налаштування автоматичного початку нової транзакції
+        txManager.setDefaultTimeout(30); // 30 секунд
+        txManager.setRollbackOnCommitFailure(true);
+
         return txManager;
     }
 }

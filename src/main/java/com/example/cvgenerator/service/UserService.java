@@ -87,42 +87,61 @@ public class UserService implements UserDetailsService {
     }
 
     public User saveUser(User user) {
-        // Якщо це новий користувач (без ID), перевіряємо чи існує такий email
-        if (user.getId() == null) {
-            if (userRepository.existsByEmail(user.getEmail())) {
-                throw new RuntimeException("Користувач з таким email вже існує");
+        try {
+            // Якщо це новий користувач (без ID), перевіряємо чи існує такий email
+            if (user.getId() == null) {
+                if (userRepository.existsByEmail(user.getEmail())) {
+                    throw new RuntimeException("Користувач з таким email вже існує");
+                }
+
+                System.out.println("Зберігаємо нового користувача з email: " + user.getEmail());
+
+                // Для нового користувача генеруємо код перевірки, якщо це не адміністратор
+                if (!"ROLE_ADMIN".equals(user.getRole())) {
+                    String verificationCode = generateVerificationCode();
+                    user.setVerificationCode(verificationCode);
+                    user.setVerified(false);
+                    user.setVerificationCodeExpiry(LocalDateTime.now().plusMinutes(10));
+
+                    // Шифрування пароля
+                    user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+                    // Зберігаємо користувача з retry логікою в разі помилки
+                    User savedUser = null;
+                    try {
+                        savedUser = userRepository.save(user);
+                        System.out.println("Користувач успішно збережений з ID: " + savedUser.getId());
+                    } catch (Exception e) {
+                        System.err.println("Помилка при збереженні користувача: " + e.getMessage());
+                        throw e;
+                    }
+
+                    try {
+                        // Відправляємо код електронною поштою
+                        emailService.sendVerificationEmail(user.getEmail(), verificationCode);
+                    } catch (Exception e) {
+                        System.err.println("Помилка відправки пошти, але користувач збережений: " + e.getMessage());
+                    }
+
+                    return savedUser;
+                } else {
+                    // Для адміністратора відразу встановлюємо verified = true
+                    user.setVerified(true);
+                }
             }
 
-            // Для нового користувача генеруємо код перевірки, якщо це не адміністратор
-            if (!"ROLE_ADMIN".equals(user.getRole())) {
-                String verificationCode = generateVerificationCode();
-                user.setVerificationCode(verificationCode);
-                user.setVerified(false);
-                user.setVerificationCodeExpiry(LocalDateTime.now().plusMinutes(10));
-
-                // Шифрування пароля
+            // Шифрування пароля, якщо він ще не зашифрований і не пустий
+            if (user.getPassword() != null && !user.getPassword().isEmpty()
+                    && !user.getPassword().startsWith("$2a$")) {
                 user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-                // Зберігаємо користувача
-                User savedUser = userRepository.save(user);
-
-                // Відправляємо код електронною поштою
-                emailService.sendVerificationEmail(user.getEmail(), verificationCode);
-
-                return savedUser;
-            } else {
-                // Для адміністратора відразу встановлюємо verified = true
-                user.setVerified(true);
             }
-        }
 
-        // Шифрування пароля, якщо він ще не зашифрований і не пустий
-        if (user.getPassword() != null && !user.getPassword().isEmpty()
-                && !user.getPassword().startsWith("$2a$")) {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            return userRepository.save(user);
+        } catch (Exception e) {
+            System.err.println("Виняток у методі saveUser: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
         }
-
-        return userRepository.save(user);
     }
 
     // Метод для генерації 6-значного коду
