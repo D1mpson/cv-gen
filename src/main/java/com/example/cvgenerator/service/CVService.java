@@ -3,7 +3,10 @@ package com.example.cvgenerator.service;
 import com.example.cvgenerator.model.CV;
 import com.example.cvgenerator.model.User;
 import com.example.cvgenerator.repository.CVRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,9 +21,13 @@ import java.util.UUID;
 @Service
 public class CVService {
 
+    private static final Logger logger = LoggerFactory.getLogger(CVService.class);
+
     private final CVRepository cvRepository;
     private final UserService userService;
-    private final String UPLOAD_DIR = "uploads/photos/";
+
+    @Value("${app.upload.dir:/app/uploads}/photos/")
+    private String UPLOAD_DIR;
 
     @Autowired
     public CVService(CVRepository cvRepository, UserService userService) {
@@ -30,10 +37,18 @@ public class CVService {
         try {
             Path uploadPath = Paths.get(UPLOAD_DIR);
             if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
+                try {
+                    Files.createDirectories(uploadPath);
+                    logger.info("Створено директорію для завантажень: {}", UPLOAD_DIR);
+                } catch (Exception e) {
+                    logger.warn("Не вдалося створити директорію для завантажень: {}. Помилка: {}",
+                            UPLOAD_DIR, e.getMessage());
+                    // Продовжуємо роботу навіть якщо директорію не вдалося створити
+                }
             }
-        } catch (IOException e) {
-            System.err.println("Не вдалося створити директорію для завантажень: " + e.getMessage());
+        } catch (Exception e) {
+            logger.error("Помилка при ініціалізації директорії для завантажень: {}", e.getMessage());
+            // Не кидаємо виняток далі, щоб не перервати запуск програми
         }
     }
 
@@ -42,12 +57,18 @@ public class CVService {
         User currentUser = userService.getCurrentUser();
         cv.setUser(currentUser);
 
-        // Обробка завантаження фото
+        // Обробка завантаження фото з обробкою помилок
         if (photoFile != null && !photoFile.isEmpty()) {
-            String fileName = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
-            Path filePath = Paths.get(UPLOAD_DIR + fileName);
-            Files.write(filePath, photoFile.getBytes());
-            cv.setPhotoPath(fileName);
+            try {
+                String fileName = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
+                Path filePath = Paths.get(UPLOAD_DIR + fileName);
+                Files.write(filePath, photoFile.getBytes());
+                cv.setPhotoPath(fileName);
+                logger.info("Завантажено фото: {}", fileName);
+            } catch (Exception e) {
+                logger.warn("Не вдалося завантажити фото: {}", e.getMessage());
+                // Не встановлюємо шлях до фото, але продовжуємо обробку
+            }
         }
 
         // Ініціалізуємо колекції, якщо вони null

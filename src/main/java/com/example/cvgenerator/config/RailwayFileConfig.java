@@ -25,13 +25,25 @@ public class RailwayFileConfig {
         try {
             logger.info("Ініціалізація директорій для завантаження в Railway: {}", uploadDir);
 
-            Files.createDirectories(Paths.get(uploadDir));
-            Files.createDirectories(Paths.get(uploadDir + "/photos"));
+            // Створюємо директорії з обробкою помилок
+            try {
+                Files.createDirectories(Paths.get(uploadDir));
+                logger.info("Створено директорію: {}", uploadDir);
+            } catch (Exception e) {
+                logger.warn("Не вдалося створити директорію {}: {}", uploadDir, e.getMessage());
+                // Не перекидаємо помилку, щоб не переривати запуск додатку
+            }
 
-            logger.info("Створено директорії для завантаження в: {}", uploadDir);
-        } catch (IOException e) {
-            logger.error("Не вдалося створити директорії для завантаження: {}", e.getMessage(), e);
-            throw new RuntimeException("Не вдалося створити директорії для завантаження", e);
+            try {
+                Files.createDirectories(Paths.get(uploadDir + "/photos"));
+                logger.info("Створено директорію для фото: {}/photos", uploadDir);
+            } catch (Exception e) {
+                logger.warn("Не вдалося створити директорію {}/photos: {}", uploadDir, e.getMessage());
+                // Не перекидаємо помилку, щоб не переривати запуск додатку
+            }
+        } catch (Exception e) {
+            logger.error("Помилка при ініціалізації директорій: {}", e.getMessage());
+            // Не перекидаємо помилку, щоб не переривати запуск додатку
         }
     }
 }
