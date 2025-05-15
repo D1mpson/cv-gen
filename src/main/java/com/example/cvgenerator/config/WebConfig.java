@@ -1,4 +1,4 @@
-/*package com.example.cvgenerator.config;
+package com.example.cvgenerator.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,5 +33,3 @@ public class WebConfig implements WebMvcConfigurer {
 //        return slr;
 //    }
 }
-
- */

@@ -1,1 +1,0 @@
-web: java -Dspring.profiles.active=prod -Xmx512m -Dserver.port=$PORT -jar target/cv-generator-0.0.1-SNAPSHOT.jar

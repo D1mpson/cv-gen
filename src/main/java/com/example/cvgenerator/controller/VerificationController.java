@@ -4,8 +4,6 @@ import com.example.cvgenerator.model.User;
 import com.example.cvgenerator.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -23,9 +21,6 @@ import java.util.Optional;
 
 @Controller
 public class VerificationController {
-
-    // Додати це оголошення логера
-    private static final Logger logger = LoggerFactory.getLogger(VerificationController.class);
 
     private final UserService userService;
 
@@ -46,25 +41,17 @@ public class VerificationController {
                               HttpServletRequest request,
                               RedirectAttributes redirectAttributes) {
 
-        logger.info("Отримано запит на верифікацію для email: {}", email);
+        System.out.println("Отримано запит на верифікацію для email: " + email);
         boolean verified = userService.verifyUser(email, code);
 
         if (verified) {
-            logger.info("Верифікація успішна, спроба автоматичного входу");
+            System.out.println("Верифікація успішна, спроба автоматичного входу");
             try {
                 // Отримуємо користувача
                 Optional<User> userOptional = userService.findByEmail(email);
 
                 if (userOptional.isPresent()) {
                     User user = userOptional.get();
-
-                    // Перевірка, що користувач дійсно верифікований
-                    if (!user.isVerified()) {
-                        logger.warn("Користувач {} успішно пройшов верифікацію, але флаг verified = false", email);
-                        redirectAttributes.addFlashAttribute("error",
-                                "Сталася помилка при верифікації. Спробуйте увійти звичайним способом.");
-                        return "redirect:/login";
-                    }
 
                     // Створюємо authentication об'єкт без перевірки паролю
                     UserDetails userDetails = userService.loadVerifiedUserByUsername(email);
@@ -86,8 +73,8 @@ public class VerificationController {
                     // Оновлюємо також SecurityContextHolder
                     SecurityContextHolder.setContext(securityContext);
 
-                    logger.info("Автентифікація встановлена для користувача: {}", email);
-                    logger.info("Статус автентифікації: {}", SecurityContextHolder.getContext().getAuthentication().isAuthenticated());
+                    System.out.println("Автентифікація встановлена для користувача: " + email);
+                    System.out.println("Статус автентифікації: " + SecurityContextHolder.getContext().getAuthentication().isAuthenticated());
 
                     redirectAttributes.addFlashAttribute("welcomeMessage",
                             "Вітаємо! Ваш email підтверджено, і ви увійшли в систему.");
@@ -95,7 +82,8 @@ public class VerificationController {
                     return "redirect:/profile";
                 }
             } catch (Exception e) {
-                logger.error("ПОМИЛКА автоматичного входу: {}", e.getMessage(), e);
+                System.err.println("ПОМИЛКА автоматичного входу: " + e.getMessage());
+                e.printStackTrace();
             }
 
             redirectAttributes.addFlashAttribute("success",
