@@ -47,8 +47,8 @@ public class User {
     private LocalDate birthDate;
 
     @NotNull(message = "Місто є обовʼязковим")
-    @Column(name = "city_life") // Явно вказуємо назву колонки
-    private String cityLife = ""; // Значення за замовчуванням
+    @Column(name = "city_life") // Явно вказуємо, що поле cityLife відповідає колонці city_life в БД
+    private String cityLife = "Не вказано"; // Встановлюємо значення за замовчуванням
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<CV> cvList = new ArrayList<>();

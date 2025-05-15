@@ -51,7 +51,7 @@ public class UserController {
             return "register";
         }
 
-        // Перевірка cityLife на порожність і встановлення значення за замовчуванням
+        // ВАЖЛИВО: Явно встановлюємо значення для cityLife, якщо воно порожнє
         if (user.getCityLife() == null || user.getCityLife().trim().isEmpty()) {
             user.setCityLife("Не вказано");
         }
@@ -60,7 +60,7 @@ public class UserController {
             userService.saveUser(user);
             redirectAttrs.addFlashAttribute("message", "Реєстрація пройшла успішно. Перевірте вашу електронну пошту для підтвердження акаунту.");
             redirectAttrs.addAttribute("email", user.getEmail());
-            return "redirect:/verify"; // Перенаправляємо на сторінку верифікації
+            return "redirect:/verify";
         } catch (Exception e) {
             result.rejectValue("email", "error.user", e.getMessage());
             return "register";
