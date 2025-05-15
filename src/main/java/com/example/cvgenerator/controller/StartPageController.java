@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class StartPageController {
 
-    // Залишаємо маппінг на "/", оскільки це основна сторінка
     @GetMapping("/")
     public String index() {
         return "index";
@@ -16,6 +15,7 @@ public class StartPageController {
     public String login() {
         return "login";
     }
+
 
     @GetMapping("/help")
     public String help() {
