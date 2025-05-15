@@ -10,9 +10,6 @@ COPY --from=build /app/target/cv-generator-0.0.1-SNAPSHOT.jar app.jar
 # Створюємо директорії для файлів
 RUN mkdir -p /app/uploads/photos && chmod -R 777 /app/uploads
 
-# Додаємо SQL скрипт для ініціалізації схеми
-COPY src/main/resources/db/migration/V1__fix_schema.sql /app/init.sql
-
 # Встановлюємо змінну середовища для активації профілю production
 ENV SPRING_PROFILES_ACTIVE=prod
 

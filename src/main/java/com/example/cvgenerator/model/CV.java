@@ -15,12 +15,13 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "cvs")
+@Table(name = "cvs", indexes = {
+        @Index(name = "idx_cv_id", columnList = "id", unique = true)
+})
 public class CV {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", unique = true) // Додаємо явне обмеження унікальності
     private Long id;
 
     @NotBlank(message = "Назва CV є обовʼязковою")

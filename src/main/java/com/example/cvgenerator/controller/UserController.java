@@ -46,32 +46,22 @@ public class UserController {
     public String registerUserAccount(@Valid @ModelAttribute("user") User user,
                                       BindingResult result,
                                       RedirectAttributes redirectAttrs) {
-        logger.info("Спроба реєстрації користувача: {}", user.getEmail());
-
         // Перевіряємо чи є помилки валідації
         if (result.hasErrors()) {
-            logger.warn("Помилки валідації: {}", result.getAllErrors());
             return "register";
         }
 
         // Перевірка cityLife на порожність і встановлення значення за замовчуванням
         if (user.getCityLife() == null || user.getCityLife().trim().isEmpty()) {
-            logger.info("Поле cityLife порожнє, встановлюємо значення за замовчуванням");
             user.setCityLife("Не вказано");
         }
 
         try {
-            logger.debug("Дані користувача перед збереженням: firstName={}, lastName={}, email={}, cityLife={}",
-                    user.getFirstName(), user.getLastName(), user.getEmail(), user.getCityLife());
-
             userService.saveUser(user);
-            logger.info("Користувач успішно зареєстрований: {}", user.getEmail());
-
             redirectAttrs.addFlashAttribute("message", "Реєстрація пройшла успішно. Перевірте вашу електронну пошту для підтвердження акаунту.");
             redirectAttrs.addAttribute("email", user.getEmail());
             return "redirect:/verify"; // Перенаправляємо на сторінку верифікації
         } catch (Exception e) {
-            logger.error("Помилка при реєстрації: {}", e.getMessage(), e);
             result.rejectValue("email", "error.user", e.getMessage());
             return "register";
         }
