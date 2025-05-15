@@ -80,7 +80,9 @@
                     </div>
                     <p class="form-hint">Рекомендований розмір фото: 3:4, формат: JPG, PNG, максимальний розмір: 10МБ</p>
                     <p class="form-hint">Якщо ви обрали файл, він обовʼязково завантажиться.</p>
-
+                    <p class="form-hint" th:if="${cv.photoPath != null && cv.photoPath.startsWith('http')}">
+                        Поточне фото: <a th:href="${cv.photoPath}" target="_blank">Переглянути</a>
+                    </p>
                 </div>
             </div>
 

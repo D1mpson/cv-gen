@@ -22,6 +22,7 @@ public class CVService {
 
     private final CVRepository cvRepository;
     private final UserService userService;
+    private final CloudinaryService cloudinaryService;
 
     @Value("${app.upload.dir:/app/uploads}")
     private String baseUploadDir;
@@ -29,9 +30,10 @@ public class CVService {
     private final String UPLOAD_DIR;
 
     @Autowired
-    public CVService(CVRepository cvRepository, UserService userService) {
+    public CVService(CVRepository cvRepository, UserService userService, CloudinaryService cloudinaryService) {
         this.cvRepository = cvRepository;
         this.userService = userService;
+        this.cloudinaryService = cloudinaryService;
         this.UPLOAD_DIR = baseUploadDir + "/photos/";
 
         try {
@@ -57,22 +59,25 @@ public class CVService {
 
         // Обробка завантаження фото
         if (photoFile != null && !photoFile.isEmpty()) {
-            try {
-                // Переконаємось, що директорія існує
-                File uploadDir = new File(UPLOAD_DIR);
-                if (!uploadDir.exists()) {
-                    uploadDir.mkdirs();
+            // Спочатку намагаємося завантажити до Cloudinary, якщо він налаштований
+            if (cloudinaryService.isCloudinaryEnabled()) {
+                try {
+                    String imageUrl = cloudinaryService.uploadFile(photoFile);
+                    if (imageUrl != null) {
+                        cv.setPhotoPath(imageUrl);
+                        System.out.println("Фото успішно завантажено до Cloudinary: " + imageUrl);
+                    } else {
+                        // Якщо Cloudinary не спрацював, використовуємо локальне зберігання
+                        uploadToLocalStorage(cv, photoFile);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Помилка при завантаженні до Cloudinary. Використовуємо локальне сховище: " + e.getMessage());
+                    // Якщо щось пішло не так з Cloudinary, використовуємо локальне зберігання
+                    uploadToLocalStorage(cv, photoFile);
                 }
-
-                String fileName = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
-                Path filePath = Paths.get(UPLOAD_DIR + fileName);
-                Files.write(filePath, photoFile.getBytes());
-                cv.setPhotoPath(fileName);
-
-                System.out.println("Фото збережено за шляхом: " + filePath.toString());
-            } catch (Exception e) {
-                System.err.println("Помилка при завантаженні фото: " + e.getMessage());
-                e.printStackTrace();
+            } else {
+                // Якщо Cloudinary не налаштований, використовуємо локальне зберігання
+                uploadToLocalStorage(cv, photoFile);
             }
         }
 
@@ -86,6 +91,26 @@ public class CVService {
         }
 
         return cvRepository.save(cv);
+    }
+
+    private void uploadToLocalStorage(CV cv, MultipartFile photoFile) {
+        try {
+            // Переконаємось, що директорія існує
+            File uploadDir = new File(UPLOAD_DIR);
+            if (!uploadDir.exists()) {
+                uploadDir.mkdirs();
+            }
+
+            String fileName = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
+            Path filePath = Paths.get(UPLOAD_DIR + fileName);
+            Files.write(filePath, photoFile.getBytes());
+            cv.setPhotoPath(fileName);
+
+            System.out.println("Фото збережено локально за шляхом: " + filePath.toString());
+        } catch (Exception e) {
+            System.err.println("Помилка при завантаженні фото локально: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public List<CV> getAllCVsByUser(User user) {
@@ -140,24 +165,64 @@ public class CVService {
 
         // Обробка нового фото
         if (photoFile != null && !photoFile.isEmpty()) {
-            try {
-                // Видалення старого фото, якщо воно існує
-                if (existingCV.getPhotoPath() != null && !existingCV.getPhotoPath().isEmpty()) {
-                    Path oldPath = Paths.get(UPLOAD_DIR + existingCV.getPhotoPath());
-                    Files.deleteIfExists(oldPath);
-                }
+            String oldPhotoPath = existingCV.getPhotoPath();
 
-                String fileName = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
-                Path filePath = Paths.get(UPLOAD_DIR + fileName);
-                Files.write(filePath, photoFile.getBytes());
-                existingCV.setPhotoPath(fileName);
-            } catch (Exception e) {
-                System.err.println("Помилка при оновленні фото: " + e.getMessage());
-                e.printStackTrace();
+            // Спочатку спробуємо завантажити фото до Cloudinary
+            if (cloudinaryService.isCloudinaryEnabled()) {
+                try {
+                    String imageUrl = cloudinaryService.uploadFile(photoFile);
+                    if (imageUrl != null) {
+                        // Видаляємо старе фото, якщо воно було на Cloudinary
+                        if (oldPhotoPath != null && oldPhotoPath.contains("cloudinary.com")) {
+                            cloudinaryService.deleteFile(oldPhotoPath);
+                        } else if (oldPhotoPath != null && !oldPhotoPath.isEmpty()) {
+                            // Видаляємо локальний файл, якщо такий був
+                            try {
+                                Path oldPath = Paths.get(UPLOAD_DIR + oldPhotoPath);
+                                Files.deleteIfExists(oldPath);
+                            } catch (Exception e) {
+                                System.err.println("Не вдалося видалити локальне фото: " + e.getMessage());
+                            }
+                        }
+
+                        existingCV.setPhotoPath(imageUrl);
+                        System.out.println("Фото успішно оновлено в Cloudinary: " + imageUrl);
+                    } else {
+                        // Якщо Cloudinary не спрацював, використовуємо локальне зберігання
+                        updateLocalPhoto(existingCV, photoFile, oldPhotoPath);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Помилка при оновленні фото в Cloudinary. Використовуємо локальне сховище: " + e.getMessage());
+                    // Якщо щось пішло не так з Cloudinary, використовуємо локальне зберігання
+                    updateLocalPhoto(existingCV, photoFile, oldPhotoPath);
+                }
+            } else {
+                // Якщо Cloudinary не налаштований, використовуємо локальне зберігання
+                updateLocalPhoto(existingCV, photoFile, oldPhotoPath);
             }
         }
 
         cvRepository.save(existingCV);
+    }
+
+    private void updateLocalPhoto(CV cv, MultipartFile photoFile, String oldPhotoPath) {
+        try {
+            // Видалення старого фото, якщо воно існує і не є Cloudinary URL
+            if (oldPhotoPath != null && !oldPhotoPath.isEmpty() && !oldPhotoPath.startsWith("http")) {
+                Path oldPath = Paths.get(UPLOAD_DIR + oldPhotoPath);
+                Files.deleteIfExists(oldPath);
+            }
+
+            String fileName = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
+            Path filePath = Paths.get(UPLOAD_DIR + fileName);
+            Files.write(filePath, photoFile.getBytes());
+            cv.setPhotoPath(fileName);
+
+            System.out.println("Фото оновлено локально за шляхом: " + filePath.toString());
+        } catch (Exception e) {
+            System.err.println("Помилка при оновленні фото локально: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public void deleteCV(Long id) {
@@ -170,12 +235,23 @@ public class CVService {
             throw new RuntimeException("У вас немає прав для видалення цього CV");
         }
 
-        if (cv.getPhotoPath() != null && !cv.getPhotoPath().isEmpty()) {
+        String photoPath = cv.getPhotoPath();
+
+        // Видаляємо фото з Cloudinary, якщо це Cloudinary URL
+        if (photoPath != null && !photoPath.isEmpty() && photoPath.contains("cloudinary.com")) {
             try {
-                Path photoPath = Paths.get(UPLOAD_DIR + cv.getPhotoPath());
-                Files.deleteIfExists(photoPath);
+                cloudinaryService.deleteFile(photoPath);
+            } catch (Exception e) {
+                System.err.println("Помилка при видаленні фото з Cloudinary: " + e.getMessage());
+            }
+        }
+        // Або видаляємо локальний файл
+        else if (photoPath != null && !photoPath.isEmpty()) {
+            try {
+                Path localPhotoPath = Paths.get(UPLOAD_DIR + photoPath);
+                Files.deleteIfExists(localPhotoPath);
             } catch (IOException e) {
-                System.err.println("Не вдалося видалити фото: " + e.getMessage());
+                System.err.println("Не вдалося видалити локальне фото: " + e.getMessage());
             }
         }
 
