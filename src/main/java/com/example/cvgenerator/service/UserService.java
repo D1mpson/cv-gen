@@ -86,6 +86,7 @@ public class UserService implements UserDetailsService {
         }
     }
 
+    // Змініть метод saveUser в UserService.java
     public User saveUser(User user) {
         // Якщо це новий користувач (без ID), перевіряємо чи існує такий email
         if (user.getId() == null) {
@@ -107,7 +108,11 @@ public class UserService implements UserDetailsService {
                 User savedUser = userRepository.save(user);
 
                 // Відправляємо код електронною поштою
-                emailService.sendVerificationEmail(user.getEmail(), verificationCode);
+                boolean mailSent = emailService.sendVerificationEmail(user.getEmail(), verificationCode);
+
+                if (!mailSent) {
+                    // Користувач зберігається, навіть якщо не вдалося надіслати email
+                }
 
                 return savedUser;
             } else {
@@ -124,7 +129,6 @@ public class UserService implements UserDetailsService {
 
         return userRepository.save(user);
     }
-
     // Метод для генерації 6-значного коду
     private String generateVerificationCode() {
         Random random = new Random();

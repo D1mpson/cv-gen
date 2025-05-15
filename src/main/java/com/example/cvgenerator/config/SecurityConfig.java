@@ -24,7 +24,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/", "/register", "/login", "/help", "/css/**", "/js/**", "/images/**", "/uploads/**", "/error").permitAll()
-                        .requestMatchers("/verify", "/verify/**", "/resend-code").permitAll() // Нові шляхи для верифікації
+                        .requestMatchers("/verify", "/verify/**", "/resend-code").permitAll() // Шляхи для верифікації
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
@@ -40,9 +40,18 @@ public class SecurityConfig {
                         .clearAuthentication(true)
                         .permitAll()
                 )
-                // Додамо налаштування для забезпечення зберігання контексту безпеки в сесії
                 .securityContext(securityContext -> securityContext
                         .requireExplicitSave(false) // Автоматично зберігати контекст
+                )
+                // Додаємо обробку виключень
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            if (request.getRequestURI().contains("/admin")) {
+                                response.sendRedirect("/login?admin_error=true");
+                            } else {
+                                response.sendRedirect("/login?error=true");
+                            }
+                        })
                 );
 
         return http.build();
