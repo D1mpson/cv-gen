@@ -15,9 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "cvs", indexes = {
-        @Index(name = "idx_cv_id", columnList = "id", unique = true)
-})
+@Table(name = "cvs")
 public class CV {
 
     @Id

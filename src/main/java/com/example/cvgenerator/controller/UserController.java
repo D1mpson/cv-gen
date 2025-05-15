@@ -6,8 +6,6 @@ import com.example.cvgenerator.service.CVService;
 import com.example.cvgenerator.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,8 +18,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class UserController {
-
-    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     private final UserService userService;
     private final CVService cvService;
@@ -41,7 +37,7 @@ public class UserController {
         return "register";
     }
 
-    // Обробка форми реєстрації з перевіркою cityLife на сервері
+    // Обробка форми реєстрації
     @PostMapping("/register")
     public String registerUserAccount(@Valid @ModelAttribute("user") User user,
                                       BindingResult result,
@@ -51,17 +47,12 @@ public class UserController {
             return "register";
         }
 
-        // ВАЖЛИВО: Явно встановлюємо значення для cityLife, якщо воно порожнє
-        if (user.getCityLife() == null || user.getCityLife().trim().isEmpty()) {
-            user.setCityLife("Не вказано");
-        }
-
         try {
             userService.saveUser(user);
             redirectAttrs.addFlashAttribute("message", "Реєстрація пройшла успішно. Перевірте вашу електронну пошту для підтвердження акаунту.");
             redirectAttrs.addAttribute("email", user.getEmail());
-            return "redirect:/verify";
-        } catch (Exception e) {
+            return "redirect:/verify"; // Перенаправляємо на сторінку верифікації
+        } catch (RuntimeException e) {
             result.rejectValue("email", "error.user", e.getMessage());
             return "register";
         }
