@@ -47,6 +47,7 @@ public class User {
     private LocalDate birthDate;
 
     @NotNull(message = "Місто є обовʼязковим")
+    @Column(name = "city_life") // Додаємо анотацію з явним іменем колонки
     private String cityLife = ""; // Додаємо значення за замовчуванням
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
