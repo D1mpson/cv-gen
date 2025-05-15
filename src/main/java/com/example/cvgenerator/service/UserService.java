@@ -86,7 +86,6 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    // Оновлення методу saveUser
     public User saveUser(User user) {
         // Якщо це новий користувач (без ID), перевіряємо чи існує такий email
         if (user.getId() == null) {
@@ -107,13 +106,8 @@ public class UserService implements UserDetailsService {
                 // Зберігаємо користувача
                 User savedUser = userRepository.save(user);
 
-                // Відправляємо код електронною поштою і перевіряємо результат
-                boolean emailSent = emailService.sendVerificationEmail(user.getEmail(), verificationCode);
-                if (!emailSent) {
-                    // Якщо не вдалося відправити email, автоматично верифікуємо користувача
-                    savedUser.setVerified(true);
-                    userRepository.save(savedUser);
-                }
+                // Відправляємо код електронною поштою
+                emailService.sendVerificationEmail(user.getEmail(), verificationCode);
 
                 return savedUser;
             } else {
