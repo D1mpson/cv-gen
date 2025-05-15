@@ -7,7 +7,7 @@
   "deploy": {
     "numReplicas": 1,
     "startCommand": "java -jar /app/app.jar",
-    "healthcheckPath": "/",
+    "healthcheckPath": "/login",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10

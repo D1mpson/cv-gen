@@ -19,4 +19,4 @@ RUN chmod -R 777 /app/logs
 ENV SPRING_PROFILES_ACTIVE=prod
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Xms256m", "-Xmx512m", "-jar", "app.jar"]
