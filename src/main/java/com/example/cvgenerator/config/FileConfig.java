@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.io.File;
+
 @Configuration
 public class FileConfig implements WebMvcConfigurer {
 
@@ -13,12 +15,21 @@ public class FileConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // Переконаємось, що директорія існує
+        try {
+            File photosDir = new File(uploadDir + "/photos");
+            if (!photosDir.exists()) {
+                boolean created = photosDir.mkdirs();
+                System.out.println("Директорія для фото створена: " + created);
+            }
+        } catch (Exception e) {
+            System.err.println("Помилка при створенні директорії для фото: " + e.getMessage());
+        }
 
         registry.addResourceHandler("/uploads/photos/**")
                 .addResourceLocations("file:" + uploadDir + "/photos/");
 
         registry.addResourceHandler("/images/**")
-                .addResourceLocations("file:src/main/resources/images/")
                 .addResourceLocations("classpath:/images/");
     }
 }

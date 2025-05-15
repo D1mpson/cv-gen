@@ -12,6 +12,8 @@ COPY --from=builder /app/target/*.jar app.jar
 # Створення директорій для завантажень та логів
 RUN mkdir -p /app/uploads/photos
 RUN mkdir -p /app/logs
+RUN chmod -R 777 /app/uploads
+RUN chmod -R 777 /app/logs
 
 # Змінна середовища для активації prod профілю
 ENV SPRING_PROFILES_ACTIVE=prod

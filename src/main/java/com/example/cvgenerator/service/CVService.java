@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,12 +35,18 @@ public class CVService {
         this.UPLOAD_DIR = baseUploadDir + "/photos/";
 
         try {
-            Path uploadPath = Paths.get(UPLOAD_DIR);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
+            File uploadPathDir = new File(UPLOAD_DIR);
+            if (!uploadPathDir.exists()) {
+                boolean created = uploadPathDir.mkdirs();
+                if (created) {
+                    System.out.println("Директорію створено: " + UPLOAD_DIR);
+                } else {
+                    System.err.println("Не вдалося створити директорію: " + UPLOAD_DIR);
+                }
             }
-        } catch (IOException e) {
-            System.err.println("Не вдалося створити директорію для завантажень: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Помилка при створенні директорії: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -50,10 +57,23 @@ public class CVService {
 
         // Обробка завантаження фото
         if (photoFile != null && !photoFile.isEmpty()) {
-            String fileName = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
-            Path filePath = Paths.get(UPLOAD_DIR + fileName);
-            Files.write(filePath, photoFile.getBytes());
-            cv.setPhotoPath(fileName);
+            try {
+                // Переконаємось, що директорія існує
+                File uploadDir = new File(UPLOAD_DIR);
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdirs();
+                }
+
+                String fileName = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
+                Path filePath = Paths.get(UPLOAD_DIR + fileName);
+                Files.write(filePath, photoFile.getBytes());
+                cv.setPhotoPath(fileName);
+
+                System.out.println("Фото збережено за шляхом: " + filePath.toString());
+            } catch (Exception e) {
+                System.err.println("Помилка при завантаженні фото: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
 
         // Ініціалізуємо колекції, якщо вони null
@@ -120,16 +140,21 @@ public class CVService {
 
         // Обробка нового фото
         if (photoFile != null && !photoFile.isEmpty()) {
-            // Видалення старого фото, якщо воно існує
-            if (existingCV.getPhotoPath() != null && !existingCV.getPhotoPath().isEmpty()) {
-                Path oldPath = Paths.get(UPLOAD_DIR + existingCV.getPhotoPath());
-                Files.deleteIfExists(oldPath);
-            }
+            try {
+                // Видалення старого фото, якщо воно існує
+                if (existingCV.getPhotoPath() != null && !existingCV.getPhotoPath().isEmpty()) {
+                    Path oldPath = Paths.get(UPLOAD_DIR + existingCV.getPhotoPath());
+                    Files.deleteIfExists(oldPath);
+                }
 
-            String fileName = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
-            Path filePath = Paths.get(UPLOAD_DIR + fileName);
-            Files.write(filePath, photoFile.getBytes());
-            existingCV.setPhotoPath(fileName);
+                String fileName = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
+                Path filePath = Paths.get(UPLOAD_DIR + fileName);
+                Files.write(filePath, photoFile.getBytes());
+                existingCV.setPhotoPath(fileName);
+            } catch (Exception e) {
+                System.err.println("Помилка при оновленні фото: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
 
         cvRepository.save(existingCV);
