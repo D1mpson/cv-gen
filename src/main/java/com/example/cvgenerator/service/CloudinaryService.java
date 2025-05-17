@@ -6,6 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
@@ -15,6 +21,7 @@ public class CloudinaryService {
 
     private final Cloudinary cloudinary;
     private final boolean cloudinaryEnabled;
+    private static final int MAX_IMAGE_SIZE_KB = 500; // Максимальний розмір зображення 500 KB
 
     @Autowired
     public CloudinaryService(Cloudinary cloudinary) {
@@ -42,12 +49,25 @@ public class CloudinaryService {
         }
 
         try {
+            // Перевіряємо розмір файлу
+            long fileSizeKB = file.getSize() / 1024;
+            byte[] imageData;
+
+            if (fileSizeKB > MAX_IMAGE_SIZE_KB) {
+                // Зменшуємо розмір зображення
+                imageData = resizeImage(file.getBytes());
+                System.out.println("Зображення було зменшено з " + fileSizeKB + "KB до "
+                        + (imageData.length / 1024) + "KB");
+            } else {
+                imageData = file.getBytes();
+            }
+
             // Генеруємо унікальне ім'я файлу
             String publicId = "cv_photo_" + UUID.randomUUID().toString();
 
             // Завантажуємо файл до Cloudinary
             Map<?, ?> uploadResult = cloudinary.uploader().upload(
-                    file.getBytes(),
+                    imageData,
                     ObjectUtils.asMap(
                             "public_id", publicId,
                             "folder", "cv_generator",
@@ -65,6 +85,47 @@ public class CloudinaryService {
             e.printStackTrace();
             return null; // Повертаємо null, щоб використовувати локальне зберігання
         }
+    }
+
+    // Метод для зменшення розміру зображення
+    private byte[] resizeImage(byte[] imageData) throws IOException {
+        ByteArrayInputStream bis = new ByteArrayInputStream(imageData);
+        BufferedImage originalImage = ImageIO.read(bis);
+
+        if (originalImage == null) {
+            return imageData; // Повертаємо оригінальні дані, якщо не можемо прочитати зображення
+        }
+
+        // Визначаємо нові розміри зі збереженням пропорцій
+        int maxWidth = 800;
+        int maxHeight = 800;
+
+        int width = originalImage.getWidth();
+        int height = originalImage.getHeight();
+        double ratio = (double) width / height;
+
+        if (width > maxWidth) {
+            width = maxWidth;
+            height = (int) (width / ratio);
+        }
+
+        if (height > maxHeight) {
+            height = maxHeight;
+            width = (int) (height * ratio);
+        }
+
+        // Створюємо зменшене зображення
+        BufferedImage resizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = resizedImage.createGraphics();
+        g.drawImage(originalImage.getScaledInstance(width, height, Image.SCALE_SMOOTH), 0, 0, null);
+        g.dispose();
+
+        // Зберігаємо зображення в байтовий масив з високим стисненням
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        // Зберігаємо як JPEG з якістю 0.7
+        ImageIO.write(resizedImage, "jpeg", bos);
+
+        return bos.toByteArray();
     }
 
     public void deleteFile(String imageUrl) {
@@ -88,7 +149,6 @@ public class CloudinaryService {
             System.out.println("Фото успішно видалено з Cloudinary: " + publicId);
         } catch (Exception e) {
             System.err.println("Помилка при видаленні зображення з Cloudinary: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 

@@ -8,6 +8,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,6 +33,7 @@ public class CVService {
     private String baseUploadDir;
 
     private final String UPLOAD_DIR;
+    private static final int MAX_IMAGE_SIZE_KB = 500; // Максимальний розмір зображення 500 KB
 
     @Autowired
     public CVService(CVRepository cvRepository, UserService userService, CloudinaryService cloudinaryService) {
@@ -101,15 +107,73 @@ public class CVService {
                 uploadDir.mkdirs();
             }
 
+            // Зменшуємо розмір зображення, якщо воно більше 500 КБ
+            byte[] imageData;
+            if (photoFile.getSize() > MAX_IMAGE_SIZE_KB * 1024) { // 500 KB
+                imageData = resizeImageForLocalStorage(photoFile);
+                System.out.println("Зображення було зменшено з " + (photoFile.getSize() / 1024) + "KB до "
+                        + (imageData.length / 1024) + "KB");
+            } else {
+                imageData = photoFile.getBytes();
+            }
+
             String fileName = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
             Path filePath = Paths.get(UPLOAD_DIR + fileName);
-            Files.write(filePath, photoFile.getBytes());
+            Files.write(filePath, imageData);
             cv.setPhotoPath(fileName);
 
             System.out.println("Фото збережено локально за шляхом: " + filePath.toString());
         } catch (Exception e) {
             System.err.println("Помилка при завантаженні фото локально: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private byte[] resizeImageForLocalStorage(MultipartFile file) {
+        try {
+            // Читаємо оригінальне зображення
+            BufferedImage originalImage = ImageIO.read(file.getInputStream());
+            if (originalImage == null) {
+                return file.getBytes();
+            }
+
+            // Визначаємо нові розміри зі збереженням пропорцій
+            int maxWidth = 800;
+            int maxHeight = 800;
+
+            int width = originalImage.getWidth();
+            int height = originalImage.getHeight();
+            double ratio = (double) width / height;
+
+            if (width > maxWidth) {
+                width = maxWidth;
+                height = (int) (width / ratio);
+            }
+
+            if (height > maxHeight) {
+                height = maxHeight;
+                width = (int) (height * ratio);
+            }
+
+            // Створюємо зменшене зображення
+            BufferedImage resizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = resizedImage.createGraphics();
+            g.drawImage(originalImage.getScaledInstance(width, height, Image.SCALE_SMOOTH), 0, 0, null);
+            g.dispose();
+
+            // Зберігаємо зображення в байтовий масив з високим стисненням
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ImageIO.write(resizedImage, "jpeg", bos);
+
+            return bos.toByteArray();
+        } catch (Exception e) {
+            try {
+                System.err.println("Помилка при зменшенні зображення: " + e.getMessage());
+                return file.getBytes(); // Повертаємо оригінальні дані, якщо не вдалося зменшити
+            } catch (IOException ioe) {
+                System.err.println("Критична помилка при обробці зображення: " + ioe.getMessage());
+                return new byte[0]; // Порожній масив у випадку критичної помилки
+            }
         }
     }
 
@@ -213,9 +277,19 @@ public class CVService {
                 Files.deleteIfExists(oldPath);
             }
 
+            // Зменшуємо розмір зображення, якщо воно більше 500 КБ
+            byte[] imageData;
+            if (photoFile.getSize() > MAX_IMAGE_SIZE_KB * 1024) { // 500 KB
+                imageData = resizeImageForLocalStorage(photoFile);
+                System.out.println("Зображення було зменшено з " + (photoFile.getSize() / 1024) + "KB до "
+                        + (imageData.length / 1024) + "KB");
+            } else {
+                imageData = photoFile.getBytes();
+            }
+
             String fileName = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
             Path filePath = Paths.get(UPLOAD_DIR + fileName);
-            Files.write(filePath, photoFile.getBytes());
+            Files.write(filePath, imageData);
             cv.setPhotoPath(fileName);
 
             System.out.println("Фото оновлено локально за шляхом: " + filePath.toString());

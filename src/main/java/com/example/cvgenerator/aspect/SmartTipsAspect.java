@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Aspect
 @Component
@@ -23,6 +24,13 @@ public class SmartTipsAspect {
     private final UserService userService;
     private final CVService cvService;
 
+    // Кеш для зберігання підказок з обмеженим розміром
+    private final Map<Long, Map<String, String>> tipsCache = new ConcurrentHashMap<>(100);
+    // Час останнього оновлення кешу для користувача
+    private final Map<Long, Long> lastUpdated = new ConcurrentHashMap<>(100);
+    // Час в мілісекундах, протягом якого кеш вважається актуальним (1 година)
+    private static final long CACHE_TTL = 60 * 60 * 1000;
+
     @Autowired
     public SmartTipsAspect(UserService userService, CVService cvService) {
         this.userService = userService;
@@ -31,12 +39,11 @@ public class SmartTipsAspect {
 
     @Around("execution(* com.example.cvgenerator.controller.UserController.showUserProfile(..))")
     public Object addSmartTipsToProfile(ProceedingJoinPoint joinPoint) throws Throwable {
-
-        Object[] args = joinPoint.getArgs(); //<-- Взяли агрументи методу
+        Object[] args = joinPoint.getArgs();
         Model model = null;
 
         for (Object arg : args) {
-            if (arg instanceof Model) {    //<-- шукаэмо Model серед arg
+            if (arg instanceof Model) {
                 model = (Model) arg;
                 break;
             }
@@ -46,15 +53,34 @@ public class SmartTipsAspect {
             try {
                 User currentUser = userService.getCurrentUser();
                 if (currentUser != null) {
+                    Long userId = currentUser.getId();
+                    long currentTime = System.currentTimeMillis();
 
-                    List<CV> userCVs = cvService.getAllCVsByUser(currentUser);
+                    // Перевіряємо кеш і його актуальність
+                    if (tipsCache.containsKey(userId) &&
+                            lastUpdated.containsKey(userId) &&
+                            (currentTime - lastUpdated.get(userId) < CACHE_TTL)) {
 
-                    Map<String, String> smartTips = generateSmartTips(currentUser, userCVs);  //<-- Генеруємо персоналізовані підказки
+                        model.addAttribute("smartTips", tipsCache.get(userId));
+                        logger.info("Використано кешовані підказки для користувача {}", currentUser.getEmail());
+                    } else {
+                        // Кешу немає або він застарів - генеруємо нові підказки
+                        List<CV> userCVs = cvService.getAllCVsByUser(currentUser);
+                        Map<String, String> smartTips = generateSmartTips(currentUser, userCVs);
 
-                    model.addAttribute("smartTips", smartTips);
+                        // Оновлюємо кеш
+                        tipsCache.put(userId, smartTips);
+                        lastUpdated.put(userId, currentTime);
 
-                    logger.info("Згенеровано {} підказок для користувача {}",
-                            smartTips.size(), currentUser.getEmail());
+                        model.addAttribute("smartTips", smartTips);
+                        logger.info("Згенеровано {} підказок для користувача {}",
+                                smartTips.size(), currentUser.getEmail());
+
+                        // Якщо кеш виріс занадто великим, видаляємо найстаріші записи
+                        if (tipsCache.size() > 100) {
+                            cleanupCache();
+                        }
+                    }
                 }
             } catch (Exception e) {
                 logger.error("Помилка під час генерації підказок: {}", e.getMessage());
@@ -62,6 +88,29 @@ public class SmartTipsAspect {
         }
 
         return joinPoint.proceed(args);
+    }
+
+    // Метод для очищення старих записів кешу
+    private void cleanupCache() {
+        if (lastUpdated.isEmpty()) return;
+
+        // Знаходимо 20 найстаріших записів
+        List<Map.Entry<Long, Long>> entries = new ArrayList<>(lastUpdated.entrySet());
+        entries.sort(Map.Entry.comparingByValue());
+
+        // Видаляємо 20% найстаріших записів
+        int toRemove = Math.max(1, entries.size() / 5);
+        for (int i = 0; i < toRemove && i < entries.size(); i++) {
+            Long userId = entries.get(i).getKey();
+            tipsCache.remove(userId);
+            lastUpdated.remove(userId);
+        }
+    }
+
+    // Метод для явного очищення кешу для конкретного користувача
+    public void clearCacheForUser(Long userId) {
+        tipsCache.remove(userId);
+        lastUpdated.remove(userId);
     }
 
     private Map<String, String> generateSmartTips(User user, List<CV> cvList) {

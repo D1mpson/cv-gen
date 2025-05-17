@@ -19,4 +19,5 @@ RUN chmod -R 777 /app/logs
 ENV SPRING_PROFILES_ACTIVE=prod
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-Xms256m", "-Xmx512m", "-jar", "app.jar"]
+# Оптимізовані налаштування JVM для зменшення споживання пам'яті
+ENTRYPOINT ["java", "-Xms200m", "-Xmx450m", "-XX:+UseG1GC", "-XX:+UseStringDeduplication", "-XX:+DisableExplicitGC", "-jar", "app.jar"]
